@@ -1,5 +1,6 @@
 import sqlite3 as sql
 import logging
+import csv
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='debug.txt',
@@ -84,7 +85,7 @@ class DB:
         cursor.close()
 
     @staticmethod
-    def select(columns: list or str, sort_by: bool=False, *args):
+    def select(columns: list or str, additional_options: str=""):
 
         conn = sql.connect('homes.db')
         cursor = conn.cursor()
@@ -94,23 +95,29 @@ class DB:
         else:
             columns = ', '.join(columns)
 
-        column_sort_options = ""
-
-        if sort_by:
-            first_item = args[0]
-            last_item = args[-1]
-
-            for column in args:
-                if first_item == column:
-                    column_sort_options += "ORDER BY "
-                elif last_item == column:
-                    column_sort_options += column + ";"
-                else:
-                    column_sort_options += column + ", "
-
-        returned_data = cursor.execute("SELECT " + columns + " FROM Homes" + column_sort_options).fetchall()
+        returned_data = cursor.execute("SELECT " + columns + " FROM Homes" + additional_options).fetchall()
 
         cursor.close()
         return returned_data
 
+    @staticmethod
+    def custom_query(query):
+        conn = sql.connect('homes.db')
+        cursor = conn.cursor()
+        try:
+            cursor.execute(query)
+        except sql.Error as e:
+            logging.error(e)
+            return None
+
+        return cursor.fetchall()
+
+    @staticmethod
+    def export_to_csv(city, state):
+        print("Exporting data to CSV...")
+        with open(f"{city}_{state}_homes.csv", 'w', newline='') as f:
+            data = DB.select("all", f" WHERE city='{city}' AND state='{state}'")
+            writer = csv.writer(f)
+            writer.writerow(["Address", "State", "City", "Zip Code", "Link", "Description", "Beds", "Baths", "Sqft", "Price", "Pictures", "Available", "Score"])
+            writer.writerows(data)
 

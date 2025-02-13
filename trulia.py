@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import logging
 from SQL import DB
 
+
 class Home:
 
     def __init__(self, address, city, state, zip_code, link, desc, beds, bath, sqft, price, front_pic, available):
@@ -25,8 +26,6 @@ class Home:
         return self.address
 
 class Trulia:
-
-    table = "Trulia"
 
     # URL Format: https://www.trulia.com/{city}/{state abbreviation}/{page#}_p
 
@@ -56,6 +55,12 @@ class Trulia:
         if not nav:
             self.on_last_page = True
             print(f"Finished searching for homes. Homes retrieved: {self.parsed_homes}")
+            export_to_csv = input("All homes have been written to the database. "
+                                  "Would you like to export these results as a CSV? (Y/N)").lower()
+
+            if export_to_csv == "y":
+                DB.export_to_csv(self.city, self.state)
+
             return
         else:
             self.current_link = self.base_url + nav.find_all("a", href=True)[0]['href']
@@ -131,22 +136,16 @@ class Trulia:
             bath = safe_get(home.get('bathrooms'), 'formattedValue')
             sqft = safe_get(home.get('floorSpace'), 'formattedDimension')
             price = safe_get(home.get('price'), 'price')
-            front_pic = safe_get(home.get('media', {}).get('heroImage', {}), 'url', 'medium')
+            pictures = safe_get(home.get('media', {}).get('heroImage', {}), 'url', 'medium')
             available = safe_get(home.get('currentStatus'), 'isActiveForSale')
 
-            home = Home(address, state, city, zip_code, link, desc, beds, bath, sqft, price, front_pic, available)
+            home = Home(address, state, city, zip_code, link, desc, beds, bath, sqft, price, pictures, available)
             print(home.address)
             DB.write(vars(home))
 
 
 
 def main():
-
-    def is_valid_response(response) -> bool:
-        if type(response) != str or len(response) == 0:
-            return False
-        else:
-            return True
 
     while True:
 
@@ -155,13 +154,13 @@ def main():
         if city.lower() == "exit":
             exit(0)
 
-        if not is_valid_response(city):
+        if not city:
             print("Invalid city name entered. Please try again.")
             continue
 
         state = input("State must be two characters. Enter State: ")
 
-        if not is_valid_response(state) or len(state) != 2:
+        if len(state) != 2:
             print("Invalid state name entered. State must be two characters. Please try again.")
             continue
 
