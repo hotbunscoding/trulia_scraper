@@ -1,0 +1,16 @@
+02/15/25
+
+- Fixed issue where export to CSV wouldn't export any data. This is caused by the user searching for homes in a city
+and state that does not exist. For example, searching for homes in "Charlotte, AK" would cause Trulia to redirect to
+trulia.com/AK instead of producing a 404. Export functionality now checks to make sure there is data to write and if
+there is none, it instead writes data for the homes in that state in general.
+- Included date time in exported file name so that previous exports are not overwritten
+and will always generate a unique file
+
+02/12/15
+
+- CSV functionality complete. You are now able to export results as a CSV file.
+
+02/11/25
+
+- V1.0 released, initial commit

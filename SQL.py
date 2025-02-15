@@ -1,6 +1,7 @@
 import sqlite3 as sql
 import logging
 import csv
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='debug.txt',
@@ -115,9 +116,25 @@ class DB:
     @staticmethod
     def export_to_csv(city, state):
         print("Exporting data to CSV...")
-        with open(f"{city}_{state}_homes.csv", 'w', newline='') as f:
-            data = DB.select("all", f" WHERE city='{city}' AND state='{state}'")
-            writer = csv.writer(f)
-            writer.writerow(["Address", "State", "City", "Zip Code", "Link", "Description", "Beds", "Baths", "Sqft", "Price", "Pictures", "Available", "Score"])
-            writer.writerows(data)
+        date_time = datetime.now().strftime("%m-%d-%y_%H-%M-%S")
+        data = DB.select("all", f" WHERE city='{city}' AND state='{state}'")
+        columns = ["Address", "State", "City", "Zip Code", "Link", "Description", "Beds", "Baths", "Sqft",
+                                 "Price", "Pictures", "Available", "Score"]
+        if data:
+            with open(f"{city}_{state}_homes_{date_time}.csv", 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(columns)
+                writer.writerows(data)
+        else:
+            print(f"Couldn't find any homes in the database in {city}, {state}.\nThis might mean that"
+                  f" the city was not found within that given state so "
+                  f"Trulia populated homes in the state without having a city selected.\n"
+                  f"Exporting results for homes in {state} instead.")
 
+            data = DB.select("all",
+                             f" WHERE state='{state}'")
+
+            with open(f"{state}_homes_{date_time}.csv", 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(columns)
+                writer.writerows(data)

@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 import logging
 from SQL import DB
 
-
 class Home:
 
     def __init__(self, address, city, state, zip_code, link, desc, beds, bath, sqft, price, front_pic, available):
